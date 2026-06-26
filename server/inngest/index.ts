@@ -233,7 +233,7 @@ const autoAssingRider = inngest.createFunction(
         orderId: orderId,
       };
     });
-      return result
+    return result;
   },
 );
-export const functions = [checkLowStock, sendMonthlyOffers];
+export const functions = [checkLowStock, sendMonthlyOffers, autoAssingRider];
