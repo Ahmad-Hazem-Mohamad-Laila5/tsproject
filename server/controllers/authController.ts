@@ -62,39 +62,43 @@ export const register = async (req: Request, res: Response) => {
   });
 };
 export const login = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body || {};
+
+  console.log("BODY:", req.body);
 
   if (!email || !password) {
     return res
       .status(400)
-      .json({ message: "Pleas provide email and password " });
+      .json({ message: "Please provide email and password" });
   }
+
   const user = await prisma.user.findUnique({
     where: { email: email.toLowerCase() },
     include: { addresses: true },
   });
+
+  console.log("USER FOUND:", !!user);
+
   if (!user) {
-    return res.status(401).json({
-      message: "invaild email or password",
-    });
+    return res.status(401).json({ message: "Invalid email or password" });
   }
 
+  console.log("HASH FROM DB:", user.password);
+
   const isMatch = await bcrypt.compare(password, user.password);
+  console.log("PASSWORD MATCH:", isMatch);
 
   if (!isMatch) {
-    return res.status(401).json({
-      message: "invaild email or password",
-    });
+    return res.status(401).json({ message: "Invalid email or password" });
   }
 
   const token = generateToken(user.id);
 
   const userData: any = { ...user };
   delete userData.password;
-
   userData.isAdmin = getAdminStatus(userData.email);
 
-  res.status(201).json({
+  return res.status(200).json({
     user: userData,
     token,
   });

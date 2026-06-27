@@ -1,16 +1,19 @@
 import { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
 import { prisma } from "../config/prisma.js";
+
 const admin = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user?.id;
-    if (userId) {
+
+    if (!userId) {
       return res.status(401).json({ message: "unauthorized" });
     }
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
-    if (user) {
+
+    if (!user) {
       return res.status(404).json({ message: "user not found" });
     }
 
@@ -20,15 +23,13 @@ const admin = async (req: Request, res: Response, next: NextFunction) => {
 
     if (adminEmails.includes(user.email.toLowerCase())) {
       if (req.user) req.user.isAdmin = true;
-      next();
-    } else {
-      res.status(403).json({ message: "user not found" });
+      return next();
     }
+
+    return res.status(403).json({ message: "forbidden" });
   } catch (error) {
     console.log(error);
-    return res
-      .status(500)
-      .json({ message: "admin verification failed", error });
+    return res.status(500).json({ message: "admin verification failed" });
   }
 };
 

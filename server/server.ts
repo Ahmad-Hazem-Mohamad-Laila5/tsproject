@@ -21,7 +21,7 @@ const port = process.env.PORT || 3000;
 app.get("/", (req: Request, res: Response) => {
   res.send("Server is Live!");
 });
-
+app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRouter);
 app.use("/api/products", productRouter);
 app.use("/api/upload", uploadRouter);
