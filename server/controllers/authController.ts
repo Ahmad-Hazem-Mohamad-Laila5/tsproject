@@ -73,7 +73,7 @@ export const login = async (req: Request, res: Response) => {
     where: { email: email.toLowerCase() },
     include: { addresses: true },
   });
-  if (user) {
+  if (!user) {
     return res.status(401).json({
       message: "invaild email or password",
     });
@@ -81,7 +81,7 @@ export const login = async (req: Request, res: Response) => {
 
   const isMatch = await bcrypt.compare(password, user.password);
 
-  if (isMatch) {
+  if (!isMatch) {
     return res.status(401).json({
       message: "invaild email or password",
     });

@@ -16,13 +16,10 @@ import {
 import { CgShoppingCart } from "react-icons/cg";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
-  const user: any = {
-    name: "ali",
-    email: "asalksjlas",
-    isAdmin: true,
-  };
+  const { user, logout } = useAuth();
 
   // ✅ cartCount (مصحح)
   const { cartCount, setIsCartOpen } = useCart();
@@ -47,7 +44,11 @@ const Navbar = () => {
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
-
+  const handleLogout = () => {
+    logout();
+    setUserMenuOpen(false);
+    navigate("/");
+  };
   return (
     <>
       <nav className="sticky top-0 z-50 border-b border-app-border bg-white/95 backdrop-blur-sm">
@@ -215,7 +216,10 @@ const Navbar = () => {
                         )}
                         {user && (
                           <div className="mt-1 border-t border-app-border pt-2">
-                            <button className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-app-error transition-colors hover:bg-red-50">
+                            <button
+                              onClick={logout}
+                              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-app-error transition-colors hover:bg-red-50"
+                            >
                               <BiLogOut size={17} /> Logout
                             </button>
                           </div>

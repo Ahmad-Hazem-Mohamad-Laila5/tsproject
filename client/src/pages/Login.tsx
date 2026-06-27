@@ -4,18 +4,29 @@ import { Link } from "react-router-dom";
 import { BiBasket, BiUser } from "react-icons/bi";
 import { CgPassword } from "react-icons/cg";
 import { MdEmail } from "react-icons/md";
-import { LoaderIcon } from "react-hot-toast";
+import toast, { LoaderIcon } from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
 const Login = () => {
   const [isLoginState, setIsLoginState] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const { login, register } = useAuth();
   const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => (window.location.href = "/"), 1000);
+    try {
+      if (isLoginState) {
+        await login(email, password);
+      } else {
+        await register(name, email, password);
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error?.message);
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <div className=" min-h-screen flex">
@@ -65,7 +76,7 @@ const Login = () => {
             </p>
           </div>
           {/* login / register */}
-          <form action="" className=" space-y-5">
+          <form onSubmit={handleSubmit} action="" className=" space-y-5">
             {!isLoginState && (
               <label htmlFor="" className=" text-sm flex flex-col gap-1">
                 Name
