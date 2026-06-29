@@ -1,4 +1,3 @@
-import herobg from "../../assets/hero_bg.jpeg";
 import { BiRightArrowAlt, BiStar, BiPackage, BiTimeFive } from "react-icons/bi";
 import { Link } from "react-router-dom";
 import { assets } from "../../assets/assets";
