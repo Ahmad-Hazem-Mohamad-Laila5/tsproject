@@ -3,8 +3,8 @@ import { prisma } from "../config/prisma.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 // generate JWT token
-const generateToken = (id: string) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET as string, {
+const generateToken = (id: string, isAdmin = false) => {
+  return jwt.sign({ id, isAdmin }, process.env.JWT_SECRET as string, {
     expiresIn: "30d",
   });
 };
@@ -49,12 +49,13 @@ export const register = async (req: Request, res: Response) => {
     },
   });
 
-  const token = generateToken(user.id);
+  const isAdmin = getAdminStatus(user.email);
+  const token = generateToken(user.id, isAdmin);
 
   const userData: any = { ...user };
   delete userData.password;
 
-  userData.isAdmin = getAdminStatus(userData.email);
+  userData.isAdmin = isAdmin;
 
   res.status(201).json({
     user: userData,
@@ -92,11 +93,12 @@ export const login = async (req: Request, res: Response) => {
     return res.status(401).json({ message: "Invalid email or password" });
   }
 
-  const token = generateToken(user.id);
+  const isAdmin = getAdminStatus(user.email);
+  const token = generateToken(user.id, isAdmin);
 
   const userData: any = { ...user };
   delete userData.password;
-  userData.isAdmin = getAdminStatus(userData.email);
+  userData.isAdmin = isAdmin;
 
   return res.status(200).json({
     user: userData,

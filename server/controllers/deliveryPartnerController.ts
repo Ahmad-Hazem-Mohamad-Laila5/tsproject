@@ -42,7 +42,8 @@ export const loginPartner = async (req: Request, res: Response) => {
 // get assigned deliveries
 // get /api/delivery/my-deliveries
 export const getMyDeliveries = async (req: Request, res: Response) => {
-  const { status } = req.body;
+  const status =
+    typeof req.query.status === "string" ? req.query.status : undefined;
 
   const where: any = { deliveryPartnerId: req.partner!.id };
 

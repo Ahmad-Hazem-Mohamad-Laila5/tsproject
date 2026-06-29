@@ -50,7 +50,7 @@ const AddressForm = ({
                   required
                   className=" w-full px-4 py-2.5 text-sm rounded-xl border border-app-border focus:border-app-green outline-none"
                   value={form.label}
-                  onChange={(e) => setForm({ ...form, lable: e.target.value })}
+                  onChange={(e) => setForm({ ...form, label: e.target.value })}
                 />
               </div>
               <div className="">
@@ -128,9 +128,9 @@ const AddressForm = ({
                   >
                     <input
                       type="checkbox"
-                      checked={form.checked}
+                      checked={form.isDefault}
                       onChange={(e) =>
-                        setForm({ ...form, isDefault: e.target.value })
+                        setForm({ ...form, isDefault: e.target.checked })
                       }
                     />
                     <span className=" text-sm text-app-text">

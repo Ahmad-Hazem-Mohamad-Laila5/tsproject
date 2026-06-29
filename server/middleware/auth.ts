@@ -15,9 +15,10 @@ const auth = (req: Request, res: Response, next: NextFunction) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
       id: string;
+      isAdmin?: boolean;
     };
 
-    req.user = { id: decoded.id };
+    req.user = { id: decoded.id, isAdmin: decoded.isAdmin };
     return next();
   } catch (error) {
     console.log(error);

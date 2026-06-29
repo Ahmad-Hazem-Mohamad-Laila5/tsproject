@@ -41,9 +41,9 @@ export const getProducts = async (req: Request, res: Response) => {
 
   if (sort === "price-low") orderBy.price = "asc";
   else if (sort === "price-high") orderBy.price = "desc";
-  else orderBy.createAt = "desc";
+  else orderBy.createdAt = "desc";
 
-  const products = await prisma.product.updateMany({ where, orderBy });
+  const products = await prisma.product.findMany({ where, orderBy });
 
   const productsWithDiscount = products.map((p: any) => {
     const discount =
@@ -107,11 +107,12 @@ export const updateProduct = async (req: Request, res: Response) => {
 // put /api/products/:id
 
 export const deleteProduct = async (req: Request, res: Response) => {
-  await prisma.product.delete({
+  await prisma.product.update({
     where: {
       id: req.params.id as string,
     },
+    data: { stock: Number(0) },
   });
 
-  res.json({ message: "Deleted" });
+  res.json({ message: "Product Updated" });
 };

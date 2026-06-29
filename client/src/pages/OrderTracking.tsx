@@ -6,6 +6,7 @@ import { ArrowLeftIcon, MapPinIcon, PhoneIcon } from "lucide-react";
 import OrderOTP from "../components/OrderTracking/OrderOTP";
 import LiveMap from "../components/OrderTracking/LiveMap";
 import OrderTimeLine from "../components/OrderTracking/OrderTimeLine";
+import api from "../config/api";
 
 const OrderTracking = () => {
   const { id } = useParams();
@@ -18,10 +19,40 @@ const OrderTracking = () => {
   } | null>(null);
 
   useEffect(() => {
-    setOrder(dummyDashboardOrdersData.find((o) => o._id === id) as any);
-    setLoading(false);
+    api
+      .get(`/orders/${id}`)
+      .then((res) => setOrder(res.data.order))
+      .catch(() => navi("/orders"))
+      .finally(() => setLoading(false));
   }, [id, navi]);
-
+  // live location every 10 secodns
+  useEffect(() => {
+    if (!order || ["Delivered", "Cancelled", "Placed"].includes(order.status)) {
+      return;
+    }
+    const fetchLoaction = async () => {
+      try {
+        const { data } = await api.get(`/orders/${id}/location`);
+        if (
+          data.liveLocation?.lat &&
+          data.liveLocation?.lng &&
+          data.liveLocation.updatedAt
+        ) {
+          setLiveLocatoin({
+            lat: data.liveLocation.lat,
+            lng: data.liveLocation.lng,
+          });
+        }
+        // Also update order status if it changed
+        if (data.status && data.status !== order.status) {
+          setOrder((prev) => (prev ? { ...prev, status: data.status } : prev));
+        }
+      } catch (error) {}
+    };
+    fetchLoaction();
+    const interval = setInterval(fetchLoaction, 1000);
+    return () => clearInterval(interval);
+  }, [id, order?.status]);
   if (loading) {
     return <Loading />;
   }
@@ -42,7 +73,7 @@ const OrderTracking = () => {
         {/* order id, date, status */}
         <div className=" flex items-center justify-between mb-8">
           <div className="">
-            <h1>Order #{order!._id.slice(-8).toUpperCase()}</h1>
+            <h1>Order #{order!.id.slice(-8).toUpperCase()}</h1>
             <p className=" text-sm text-app-text-light mt-1">
               Placed on{" "}
               {new Date(order!.createdAt).toLocaleDateString("en-US", {

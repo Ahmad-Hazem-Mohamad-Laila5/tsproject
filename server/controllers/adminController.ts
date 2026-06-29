@@ -43,7 +43,7 @@ export const getDeliveryPartners = async (req: Request, res: Response) => {
   const partners = await prisma.deliveryPartner.findMany({
     orderBy: { createdAt: "desc" },
   });
-    res.json({partners})
+  res.json({ partners });
 };
 export const createDeliveryPartner = async (req: Request, res: Response) => {
   const { name, email, password, phone, vehicleType } = req.body;
@@ -76,7 +76,7 @@ export const updateDeliveryPantner = async (req: Request, res: Response) => {
   if (name) data.name = name;
   if (phone) data.phone = phone;
   if (vehicleType) data.vehicleType = vehicleType;
-  if (isActive) data.isActive = isActive;
+  data.isActive = isActive;
 
   try {
     const partner = await prisma.deliveryPartner.update({
@@ -86,28 +86,40 @@ export const updateDeliveryPantner = async (req: Request, res: Response) => {
 
     res.json({ partner });
   } catch (error) {
-    res.json(404).json({ message: "Partner not found" });
+    res.status(404).json({ message: "Partner not found" });
   }
 };
 
 // assign delivery panrtner for order
 export const assignDeliveryPartner = async (req: Request, res: Response) => {
-  const { panrtnerId } = req.body;
+  const { partnerId } = req.body;
+
+  if (!partnerId) {
+    return res.status(400).json({ message: "partnerId is required" });
+  }
 
   const order = await prisma.order.findUnique({
     where: { id: req.params.id as string },
   });
 
+  if (!order) {
+    return res.status(404).json({ message: "Order not found" });
+  }
+
   const partner = await prisma.deliveryPartner.findUnique({
-    where: { id: panrtnerId },
+    where: { id: partnerId },
   });
+
+  if (!partner) {
+    return res.status(404).json({ message: "Partner not found" });
+  }
 
   const otp = String(Math.floor(100000 + Math.random() * 900000));
 
-  let status = order!.status;
+  let status = order.status;
 
-  const history: any[] = Array.isArray(order!.statusHistory)
-    ? order!.statusHistory
+  const history: any[] = Array.isArray(order.statusHistory)
+    ? order.statusHistory
     : [];
 
   if (order!.status === "Placed" || order!.status === "Confirmed") {

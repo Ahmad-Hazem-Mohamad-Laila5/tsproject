@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { dummyAddressData } from "../assets/assets";
 import {
   ArrowLeft,
   CheckIcon,
@@ -12,26 +11,49 @@ import {
 import CheckoutAddress from "../components/Checkout/CheckoutAddress";
 import CheckoutPayment from "../components/Checkout/CheckoutPayment";
 import CheckoutReview from "../components/Checkout/CheckoutReview";
+import api from "../config/api";
+import toast from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
+import type { Address, CheckoutStep } from "../types";
 
 const Checkout = () => {
   const navi = useNavigate();
-  const { items, cartTotal } = useCart();
-  const { user } = { user: { addresses: dummyAddressData } };
+  const { items, cartTotal, clearCart } = useCart();
+  const { user } = useAuth();
 
-  const [step, setStep] = useState<"address" | "payment" | "review">("address");
+  const [step, setStep] = useState<CheckoutStep>("address");
 
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [address, setAddress] = useState<Address>(() => {
+    const defaultAddr =
+      user?.addresses?.find((a) => a.isDefault) || user?.addresses?.[0];
 
-  const [address, setAddress] = useState<Address>({
-    _id: "",
-    lable: "Home",
-    address: "",
-    city: "",
-    state: "",
-    zip: "",
-    isDefault: false,
-    lat: 0,
-    lng: 0,
+    if (!defaultAddr) {
+      return {
+        id: "",
+        label: "Home",
+        address: "",
+        city: "",
+        state: "",
+        zip: "",
+        isDefault: false,
+        lat: 0,
+        lng: 0,
+      };
+    }
+
+    return {
+      id: defaultAddr.id || "",
+      label: defaultAddr.label || "Home",
+      address: defaultAddr.address || "",
+      city: defaultAddr.city || "",
+      state: defaultAddr.state || "",
+      zip: defaultAddr.zip || "",
+      isDefault: defaultAddr.isDefault || false,
+      lat: defaultAddr.lat || 0,
+      lng: defaultAddr.lng || 0,
+    };
   });
 
   const [paymentMethod, setPaymentMethod] = useState("card");
@@ -39,34 +61,45 @@ const Checkout = () => {
   const tax = cartTotal * 0.88;
   const total = cartTotal + deliveryFee + tax;
 
-  const steps: { key: string; lable: String; icon: typeof MapPinIcon }[] = [
-    { key: "address", lable: "Address", icon: MapPinIcon },
-    { key: "payment", lable: "Payment", icon: CreditCardIcon },
-    { key: "review", lable: "Review", icon: CheckIcon },
-  ];
+  const steps: { key: CheckoutStep; label: string; icon: typeof MapPinIcon }[] =
+    [
+      { key: "address", label: "Address", icon: MapPinIcon },
+      { key: "payment", label: "Payment", icon: CreditCardIcon },
+      { key: "review", label: "Review", icon: CheckIcon },
+    ];
 
   const handlePlaceOrder = async () => {
     setLoading(true);
-    navi("/orders");
-  };
+    try {
+      const orderData = {
+        items: items.map((cartItem) => ({
+          product: cartItem.product.id,
+          quantity: cartItem.quantity,
+        })),
+        shippingAddress: address,
+        paymentMethod,
+      };
 
-  useState(() => {
-    if (user?.addresses?.length) {
-      const defaultAddr =
-        user.addresses.find((a) => a.isDefault) || user.addresses[0];
-      setAddress({
-        _id: defaultAddr?._id,
-        lable: defaultAddr?.label,
-        address: defaultAddr?.address,
-        city: defaultAddr?.city,
-        state: defaultAddr?.state,
-        zip: defaultAddr?.zip,
-        isDefault: defaultAddr?.isDefault,
-        lat: defaultAddr?.lat,
-        lng: defaultAddr?.lng,
-      });
+      const { data } = await api.post("/orders", orderData);
+
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      clearCart();
+      toast.success("Order placed successfully!");
+      navigate(`/orders/${data.order?.id}`);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to place order right now.";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+      scrollTo(0, 0);
     }
-  });
+  };
 
   if (items.length === 0) {
     return (
@@ -109,7 +142,7 @@ const Checkout = () => {
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${step === s.key ? "bg-app-green text-white" : "bg-white text-app-text-light"}`}
               >
                 <s.icon className=" size-4" />
-                {s.lable}
+                {s.label}
                 {i < steps.length - 1 && <ChevronRightIcon />}
               </button>
             </div>
@@ -131,7 +164,6 @@ const Checkout = () => {
                 paymentMethod={paymentMethod}
                 setPaymentMethod={setPaymentMethod}
                 setStep={setStep}
-                user={user}
               />
             )}
             {step === "review" && (
@@ -168,15 +200,11 @@ const Checkout = () => {
               </div>
               <div className=" flex justify-between">
                 <span className=" text-app-text-light">Tax </span>
-                <span className="">
-                  {tax.toFixed(2)}
-                </span>
+                <span className="">{tax.toFixed(2)}</span>
               </div>
               <div className=" flex justify-between pt-3 border-t border-app-border text-base font-semibold">
                 <span className=" text-app-text-light">Total </span>
-                <span className=" text-app-green">
-                  {total.toFixed(2)}
-                </span>
+                <span className=" text-app-green">{total.toFixed(2)}</span>
               </div>
             </div>
           </div>

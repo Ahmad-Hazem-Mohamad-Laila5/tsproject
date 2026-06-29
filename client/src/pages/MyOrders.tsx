@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import type { Order } from "../types";
 import { Link, useSearchParams } from "react-router-dom";
-import { dummyDashboardOrdersData, statusColors } from "../assets/assets";
+import { statusColors } from "../assets/assets";
 import { useCart } from "../context/CartContext";
 import Loading from "../components/Loading";
 import { Calendar1Icon, ChevronRightIcon, PackageIcon } from "lucide-react";
+import api from "../config/api";
+import toast from "react-hot-toast";
 
 const MyOrders = () => {
   const curr = import.meta.env.DOLLAR || "$";
@@ -17,8 +19,16 @@ const MyOrders = () => {
   const tabs = ["all", "Placed", "Out for Delivery", "Delivered"];
 
   const fetchOrders = async () => {
-    setOrders(dummyDashboardOrdersData as any);
-    setLoading(false);
+    setLoading(true);
+    try {
+      const params = activeTab !== "all" ? `?status=${activeTab}` : "";
+      const { data } = await api.get(`/orders${params}`);
+      setOrders(data.orders);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error?.message);
+    } finally {
+      setLoading(false);
+    }
   };
   const { clearCart } = useCart();
   useEffect(() => {
@@ -68,8 +78,8 @@ const MyOrders = () => {
           <div className=" space-y-4">
             {orders.map((order) => (
               <Link
-                key={order._id}
-                to={`/orders/${order._id}`}
+                key={order.id}
+                to={`/orders/${order.id}`}
                 className=" block max-w-4xl bg-white rounded-2xl p-5 hover:shadow-transition-all"
               >
                 {/* order id, date & status */}
@@ -77,7 +87,7 @@ const MyOrders = () => {
                   {/* left */}
                   <div className="">
                     <p className=" text-sm font-medium text-app-green">
-                      Order #{order._id.slice(-8).toUpperCase()}
+                      Order #{order.id.slice(-8).toUpperCase()}
                     </p>
                     <div className=" flex items-center gap-2 mt-1">
                       <Calendar1Icon className=" size-3 text-app-text-light" />
@@ -118,7 +128,9 @@ const MyOrders = () => {
                 </div>
                 {/* total items & price */}
                 <div className=" flex justify-between items-center pt-3 text-sm">
-                  <span className=" text-app-text-light">{order.items.length} items</span>
+                  <span className=" text-app-text-light">
+                    {order.items.length} items
+                  </span>
                   <span className=" font-semibold text-app-green">
                     {curr}
                     {order.total.toFixed(2)}
