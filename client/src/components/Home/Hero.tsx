@@ -1,12 +1,13 @@
 import herobg from "../../assets/hero_bg.jpeg";
 import { BiRightArrowAlt, BiStar, BiPackage, BiTimeFive } from "react-icons/bi";
 import { Link } from "react-router-dom";
+import { assets } from "../../assets/assets";
 
 const Hero = () => {
   return (
     <section className="relative mb-8 overflow-hidden rounded-[28px] min-h-[420px] lg:min-h-[470px]">
       <img
-        src={herobg}
+        src={assets.vege}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
       />

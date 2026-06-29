@@ -2,13 +2,13 @@ import { heroSectionData } from "../../assets/assets";
 
 const Features = () => {
   return (
-    <section className="my-6">
+    <section >
       <div className="rounded-[28px] border border-app-border/70 bg-gradient-to-br from-white to-app-cream p-2 shadow-sm">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
           {heroSectionData.hero_features.map((fe, i) => (
             <div
               key={i}
-              className="group relative overflow-hidden rounded-[22px] border border-transparent bg-white/80 px-4 py-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-app-border hover:bg-white hover:shadow-md sm:px-5"
+              className="group relative overflow-hidden rounded-[22px] border border-transparent bg-white/80 px-4 py-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-app-border hover:bg-white hover:shadow-md sm:px-5"
             >
               <div className="absolute right-0 top-0 h-20 w-20 rounded-full bg-app-orange/5 blur-2xl transition-all duration-300 group-hover:bg-app-orange/10" />
 

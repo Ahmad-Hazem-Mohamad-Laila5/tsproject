@@ -22,7 +22,6 @@ import { useAuth } from "../context/AuthContext";
 const Navbar = () => {
   const { user, logout } = useAuth();
 
-  // ✅ cartCount (مصحح)
   const { cartCount, setIsCartOpen } = useCart();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,7 +44,7 @@ const Navbar = () => {
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
-  
+
   return (
     <>
       <nav className="sticky top-0 z-50 border-b border-app-border bg-white/95 backdrop-blur-sm">
@@ -58,7 +57,7 @@ const Navbar = () => {
             <span className="flex size-8 items-center justify-center rounded-2xl bg-app-green text-white shadow-sm sm:size-9">
               <BiBasket size={20} />
             </span>
-            <span>Instacart</span>
+            <span>FreshCart</span>
           </Link>
 
           <div className="flex w-full items-center justify-end gap-2 sm:gap-4 lg:gap-8">
@@ -99,7 +98,7 @@ const Navbar = () => {
                   placeholder="Search for products..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-10 w-full rounded-full border border-app-orange/10 bg-orange-50/70 pl-10 pr-4 text-sm text-zinc-800 outline-none transition-all placeholder:text-zinc-400 focus:border-app-orange/20 focus:bg-white focus:ring-4 focus:ring-app-orange/10"
+                  className="h-10 w-full rounded-full border border-app-orange/10 bg-white pl-10 pr-4 text-sm text-zinc-800 outline-none transition-all placeholder:text-zinc-400 focus:border-app-orange/20 focus:bg-white focus:ring-4 focus:ring-app-orange/10"
                 />
               </div>
             </form>
@@ -283,7 +282,7 @@ const Navbar = () => {
             <span className="flex size-8 items-center justify-center rounded-xl bg-app-green text-white">
               <BiBasket size={17} />
             </span>
-            Instacart
+            FreshCart
           </Link>
           <button
             onClick={() => setMobileMenuOpen(false)}

@@ -87,7 +87,7 @@ export default function DeliveryLogin() {
             <div className="mb-4 flex items-center justify-center gap-2">
               <BikeIcon className="size-7 text-app-green" />
               <span className="text-2xl font-semibold text-app-green">
-                Instacart
+                FreshCart
               </span>
             </div>
 

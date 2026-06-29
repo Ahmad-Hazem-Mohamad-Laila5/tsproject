@@ -20,10 +20,13 @@ import frozen_foods from "./frozen_foods.png";
 import personal_care from "./personal_care.png";
 import baby_care from "./baby_care.png";
 import meat_seafood from "./meat_seafood.png";
+import vg from './veg.jpg'
+import veg from './vege.jpg'
+import vege from './vg.webp'
 
 export const assets = {
   delivery_truck,
-  hero_bg,
+  hero_bg,vg,veg,vege
 };
 
 export const categoriesData = [
@@ -61,18 +64,18 @@ export const deliveryPartnerLoginImage =
 export const appPromoBannerData = {
   title: "Get fresh groceries in minutes",
   description:
-    "Download the Instacart app for exclusive deals, real-time tracking, and the freshest selection delivered right to your door.",
+    "Download the FreshCart app for exclusive deals, real-time tracking, and the freshest selection delivered right to your door.",
 };
 
 export const footerData = {
   brand: {
-    name: "Instacart",
+    name: "FreshCart",
     description:
       "Bringing fresh, organic groceries straight from local farms to your doorstep. Nourish your home with Earth's finest.",
     socials: [
-      { icon: SiFacebook, link: "#",lable:"Facebook" },
-      { icon: SiX, link: "#",lable:"X" },
-      { icon: SiInstagram, link: "#" ,lable:"Instagram"},
+      { icon: SiFacebook, link: "#", lable: "Facebook" },
+      { icon: SiX, link: "#", lable: "X" },
+      { icon: SiInstagram, link: "#", lable: "Instagram" },
     ],
   },
 
@@ -104,7 +107,7 @@ export const footerData = {
   ],
 
   bottom: {
-    copyright: "© 2026 Greatstack. All rights reserved.",
+    copyright: "© 2026 HazemLaila. All rights reserved.",
     links: [
       { label: "Privacy Policy", href: "#" },
       { label: "Terms of Service", href: "#" },
