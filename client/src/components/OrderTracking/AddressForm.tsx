@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { XIcon } from "lucide-react";
-import React from "react";
 
 const AddressForm = ({
   resetForm,

@@ -28,7 +28,6 @@ const CheckoutAddress = ({
             Saved Addresses
           </h3>
           <div className="grid sm:grid-cols-2 gap-3">
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             {user.addresses.map((addr: any) => (
               <div
                 key={addr.id || addr.label}

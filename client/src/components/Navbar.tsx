@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import {
   BiBasket,
@@ -44,11 +45,7 @@ const Navbar = () => {
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
-  const handleLogout = () => {
-    logout();
-    setUserMenuOpen(false);
-    navigate("/");
-  };
+  
   return (
     <>
       <nav className="sticky top-0 z-50 border-b border-app-border bg-white/95 backdrop-blur-sm">

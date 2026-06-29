@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
 import { PlusIcon, XIcon, TruckIcon, PhoneIcon, MailIcon } from "lucide-react";
 import type { DeliveryPartner } from "../../types";
 import Loading from "../../components/Loading";
-import { dummyDeliveryPartnerData } from "../../assets/assets";
 import api from "../../config/api";
 import toast from "react-hot-toast";
 
@@ -41,9 +42,15 @@ export default function AdminDeliveryPartners() {
       await api.post("/admin/delivery-partners", form);
       toast.success("Partner onboarded successfullu!");
       setShowForm(false);
-      setForm({ name: "", email: "", phone: "", vehicleType: "bike" });
+      setForm({
+        name: "",
+        email: "",
+        password: "",
+        phone: "",
+        vehicleType: "bike",
+      });
       fetchPartners();
-    } catch (error) {
+    } catch (error:any) {
       toast.error(error?.response?.data?.message || "failed");
     } finally {
       setSaving(false);

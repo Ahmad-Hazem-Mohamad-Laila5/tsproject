@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CheckIcon, MapPinIcon, PencilIcon, Trash2Icon } from "lucide-react";
-import React from "react";
 import api from "../../config/api";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
+import type { Address } from "../../types";
 
 interface AddressCardProps {
   addr: Address;
@@ -28,7 +29,7 @@ const AddressCard = ({
       setAddresses(data.addresses);
       updateUser({ addresses: data.addresses });
       toast.success("Address removed");
-    } catch (error) {
+    } catch (error:any) {
       toast.error(error?.response?.data?.message || error?.message);
     }
   };

@@ -55,7 +55,7 @@ const ProductsPage = () => {
 
   const cartItem = items.find((item) => item.product.id === product.id);
   const inCart = Boolean(cartItem);
-  const displayQuantity = inCart ? cartItem.quantity : localQuantity;
+  const displayQuantity = inCart ? cartItem?.quantity : localQuantity;
   const categoryLabel = product.category.replace(/-/g, " ");
 
   const handleMinus = () => {

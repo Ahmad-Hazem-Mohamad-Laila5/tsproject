@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useEffect, useState } from "react";
 import type { Order } from "../types";
 import { useNavigate, useParams } from "react-router-dom";
 import Loading from "../components/Loading";
