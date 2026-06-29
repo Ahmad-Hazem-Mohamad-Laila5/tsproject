@@ -2,6 +2,7 @@ import express from "express";
 import auth from "../middleware/auth.js";
 import {
   createOrder,
+  confirmOrderPayment,
   getAllOrders,
   getOrder,
   getOrderLocation,
@@ -14,6 +15,7 @@ const orderRouter = express.Router();
 
 orderRouter.post("/", auth, createOrder);
 orderRouter.get("/", auth, getUserOrders);
+orderRouter.get("/confirm-payment", auth, confirmOrderPayment);
 orderRouter.get("/all", auth, admin, getAllOrders);
 orderRouter.get("/:id", auth, getOrder);
 orderRouter.put("/:id/status", auth, admin, updateOrderStatus);

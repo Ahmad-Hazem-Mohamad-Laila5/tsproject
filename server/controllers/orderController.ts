@@ -66,7 +66,7 @@ export const createOrder = async (req: Request, res: Response) => {
 
   const order = await prisma.order.create({
     data: {
-      userId: req.user?.id,
+      userId: req.user!.id,
       items: orderItems,
       shippingAddress,
       paymentMethod,
@@ -89,7 +89,7 @@ export const createOrder = async (req: Request, res: Response) => {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
     // create session
     const session = await stripe.checkout.sessions.create({
-      success_url: `${req.headers.origin}/orders?clearCart=true`,
+      success_url: `${req.headers.origin}/orders?clearCart=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.origin}/checkout`,
       line_items: [
         {
@@ -127,6 +127,60 @@ export const createOrder = async (req: Request, res: Response) => {
     });
   }
   await inngest.send({ name: "order/placed", data: { orderId: order.id } });
+};
+
+// confirm stripe payment after checkout redirect
+// get /api/orders/confirm-payment
+export const confirmOrderPayment = async (req: Request, res: Response) => {
+  const sessionId = req.query.session_id as string;
+  if (!sessionId) {
+    return res.status(400).json({ message: "session_id is required" });
+  }
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const orderId = (session.metadata as any)?.orderId as string;
+  if (!orderId) {
+    return res.status(400).json({ message: "Invalid payment session" });
+  }
+
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) {
+    return res.status(404).json({ message: "Order not found" });
+  }
+
+  if (order.isPaid) {
+    return res.json({ success: true, order });
+  }
+
+  if (session.payment_status !== "paid") {
+    return res.status(400).json({ message: "Payment has not completed" });
+  }
+
+  const paidOrder = await prisma.order.update({
+    where: { id: orderId },
+    data: { isPaid: true },
+  });
+
+  const orderItems = Array.isArray(paidOrder.items)
+    ? (paidOrder.items as { product: string; quantity: number }[])
+    : [];
+  for (const item of orderItems) {
+    await prisma.product.update({
+      where: { id: item.product },
+      data: { stock: { decrement: item.quantity } },
+    });
+  }
+
+  for (const item of orderItems) {
+    await inngest.send({
+      name: "inventory/stock.update",
+      data: { productId: item.product },
+    });
+  }
+  await inngest.send({ name: "order/placed", data: { orderId } });
+
+  res.json({ success: true, order: paidOrder });
 };
 
 // get user's orders

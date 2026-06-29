@@ -31,17 +31,39 @@ const MyOrders = () => {
     }
   };
   const { clearCart } = useCart();
+  const sessionId = searchParams.get("session_id");
+  const clearCartParam = searchParams.get("clearCart");
+
   useEffect(() => {
-    if (searchParams.get("clearCart")) {
-      clearCart();
-      setSearchParams({});
-      setTimeout(() => {
+    const processParams = async () => {
+      if (sessionId) {
+        setLoading(true);
+        try {
+          await api.get(`/orders/confirm-payment?session_id=${sessionId}`);
+          toast.success("Payment confirmed successfully.");
+        } catch (error: any) {
+          toast.error(error.response?.data?.message || error.message);
+        } finally {
+          clearCart();
+          setSearchParams({});
+          fetchOrders();
+        }
+        return;
+      }
+
+      if (clearCartParam) {
+        clearCart();
+        setSearchParams({});
+        setTimeout(() => {
+          fetchOrders();
+        }, 2000);
+      } else {
         fetchOrders();
-      }, 2000);
-    } else {
-      fetchOrders();
-    }
-  }, [activeTab]);
+      }
+    };
+
+    processParams();
+  }, [activeTab, sessionId, clearCartParam]);
   return (
     <div className=" min-h-screen bg-app-cream mb-20">
       <div className=" max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
