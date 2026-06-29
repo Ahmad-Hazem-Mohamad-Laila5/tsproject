@@ -1,122 +1,80 @@
 import { useNavigate } from "react-router-dom";
 import type { Product } from "../types";
-import { Minus, Plus, Star } from "lucide-react";
+import { Plus, Star } from "lucide-react";
 import { useCart } from "../context/CartContext";
 
 interface Props {
   product: Product;
 }
-
 const ProductCard = ({ product }: Props) => {
-  const currency = import.meta.env.VITE_CURRENCY || "$";
+  const currency = import.meta.env.DOLLAR || "$";
+
+  const { addToCart } = useCart();
   const navigate = useNavigate();
-
-  const { addToCart, cartItems, increaseQuantity, decreaseQuantity } =
-    useCart();
-
-  const quantity = cartItems?.[product.id] || 0;
-
   return (
     <div
+      className=" bg-white rounded-2xl overflow-hidden shadow hover:shadow-md transition-all duration-300 group animate-fade-in cursor-pointer"
       onClick={() => navigate(`/products/${product.id}`)}
-      className="group cursor-pointer overflow-hidden rounded-[24px] border border-app-border/70 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
     >
-      <div className="relative">
-        <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-1.5">
+      {/* image */}
+      <div className=" relative aspect-square overflow-hidden">
+        <img
+          src={product.image}
+          className=" w-full h-full object-cover p-4 group-hover:p-2 transition-all duration-300"
+          alt={product.name}
+        />
+        {/* badges */}
+        <div className=" absolute top-3 left-3 flex flex-wrap gap-1.5">
           {product.discount > 0 && (
-            <span className="rounded-full bg-app-orange px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white shadow-sm">
+            <span className=" px-2 py-0.5 text-[10px] font-semibold uppercase bg-app-orange text-white rounded-full">
               {product.discount}% OFF
             </span>
           )}
         </div>
-
-        <div className="relative flex aspect-[1/1] items-center justify-center overflow-hidden bg-gradient-to-b from-app-cream to-white p-5">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
-          />
-        </div>
       </div>
-
-      <div className="space-y-3 p-4">
+      {/* Info */}
+      <div className=" p-3.5 text-zinc-700">
+        <h3 className=" text-sm leading-snug mb-1.5 line-clamp-2">
+          {product.name}
+        </h3>
+        {/* Rating */}
         {product.rating > 0 && (
-          <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-1 rounded-full bg-app-warning/10 px-2 py-1">
-              <Star className="size-3.5 fill-app-warning text-app-warning" />
-              <span className="text-[11px] font-semibold text-app-text">
-                {product.rating}
-              </span>
-            </div>
-            <span className="text-[11px] text-app-text-light">
-              {product.reviewCount} reviews
+          <div className=" flex items-center gap-1 mb-2">
+            <Star className=" size-3 text-app-warning fill-app-warning" />
+            <span className=" text-xs font-medium text-app-text">
+              {product.rating}
+            </span>
+            <span className=" text-xs text-app-text-light">
+              ({product.reviewCount})
             </span>
           </div>
         )}
-
-        <div>
-          <h3 className="line-clamp-2 min-h-[44px] text-sm font-medium leading-6 text-app-text">
-            {product.name}
-          </h3>
-        </div>
-
-        <div className="flex items-end justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-lg font-semibold text-app-text">
-                {currency}
-                {product.price.toFixed(1)}
-              </span>
-              <span className="text-xs text-app-text-light">
-                / {product.unit}
-              </span>
-            </div>
-
+        {/* price + add */}
+        <div className=" flex items-center justify-between">
+          <div className=" flex items-center gap-1 truncate">
+            <span className=" text-base font-medium">
+              {currency}
+              {product.price.toFixed(1)}
+            </span>
+            <span className=" text-xs text-app-text-light block">
+              /{product.unit}
+            </span>
             {product.originalPrice > product.price && (
-              <div className="mt-1 text-xs text-app-text-light line-through">
+              <span className=" text-xs text-app-text-light line-through ml-1.5">
                 {currency}
                 {product.originalPrice.toFixed(1)}
-              </div>
+              </span>
             )}
           </div>
-
-          {quantity > 0 ? (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-2 rounded-full border border-app-border bg-app-cream px-2 py-1.5 shadow-sm"
-            >
-              <button
-                onClick={() => decreaseQuantity(product.id)}
-                className="flex size-8 items-center justify-center rounded-full bg-white text-app-text transition hover:bg-app-orange/10 hover:text-app-orange active:scale-95"
-                title="Decrease quantity"
-              >
-                <Minus className="size-4" />
-              </button>
-
-              <span className="min-w-[20px] text-center text-sm font-semibold text-app-text">
-                {quantity}
-              </span>
-
-              <button
-                onClick={() => increaseQuantity(product.id)}
-                className="flex size-8 items-center justify-center rounded-full bg-app-green text-white transition hover:bg-app-green-light active:scale-95"
-                title="Increase quantity"
-              >
-                <Plus className="size-4" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                addToCart(product);
-              }}
-              className="inline-flex items-center justify-center rounded-full bg-app-green px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:bg-app-green-light active:scale-[0.98]"
-              title="Add to cart"
-            >
-              Add
-            </button>
-          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              addToCart(product);
+            }}
+            className=" size-7 rounded-full bg-app-orange text-white flex-center shrink-0 hover:bg-app-orange-dark transition-colors active:scale-95"
+          >
+            <Plus className=" size-3.5" />
+          </button>
         </div>
       </div>
     </div>
