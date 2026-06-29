@@ -70,9 +70,9 @@ export const footerData = {
     description:
       "Bringing fresh, organic groceries straight from local farms to your doorstep. Nourish your home with Earth's finest.",
     socials: [
-      { icon: SiFacebook, link: "#" },
-      { icon: SiX, link: "#" },
-      { icon: SiInstagram, link: "#" },
+      { icon: SiFacebook, link: "#",lable:"Facebook" },
+      { icon: SiX, link: "#",lable:"X" },
+      { icon: SiInstagram, link: "#" ,lable:"Instagram"},
     ],
   },
 

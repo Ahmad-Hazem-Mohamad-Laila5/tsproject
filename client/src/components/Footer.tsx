@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import { footerData } from "../assets/assets";
 import { BiBasket, BiChevronRight } from "react-icons/bi";
@@ -38,7 +37,7 @@ const Footer = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/75 transition-all duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white"
-                  aria-label={social.label || `Social link ${i + 1}`}
+                  aria-label={social.lable || `Social link ${i + 1}`}
                 >
                   <social.icon className="size-4" />
                 </a>

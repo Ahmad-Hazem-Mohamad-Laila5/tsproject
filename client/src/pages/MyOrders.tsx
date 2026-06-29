@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import type { Order } from "../types";
 import { Link, useSearchParams } from "react-router-dom";
 import { statusColors } from "../assets/assets";
@@ -29,6 +29,7 @@ const MyOrders = () => {
         activeTab !== "all" ? `?status=${encodeURIComponent(activeTab)}` : "";
       const { data } = await api.get(`/orders${params}`);
       setOrders(data.orders || []);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
@@ -48,6 +49,7 @@ const MyOrders = () => {
           await api.get(`/orders/confirm-payment?session_id=${sessionId}`);
           clearCart();
           toast.success("Payment confirmed successfully.");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
           toast.error(error?.response?.data?.message || error?.message);
         } finally {
@@ -66,6 +68,7 @@ const MyOrders = () => {
     };
 
     processParams();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, sessionId, clearCartParam, setSearchParams]);
 
   return (

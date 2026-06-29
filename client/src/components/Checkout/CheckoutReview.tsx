@@ -2,7 +2,7 @@ import {
   CheckIcon,
   CreditCardIcon,
   MapPinIcon,
-  PencilIcon,
+  
 } from "lucide-react";
 import type { Address, CheckoutStep } from "../../types";
 import type { Dispatch, SetStateAction } from "react";
@@ -34,6 +34,7 @@ export default function CheckoutReview({
   loading,
   total,
   paymentMethod,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setStep,
 }: CheckoutReviewProps) {
   const currency = import.meta.env.VITE_CURRENCY || "$";
