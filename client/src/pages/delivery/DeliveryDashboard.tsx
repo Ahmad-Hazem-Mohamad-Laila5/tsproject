@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { PackageIcon, NavigationIcon } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { NavigationIcon, PackageIcon, RadarIcon } from "lucide-react";
 import OtpModal from "../../components/Delivery/OtpModal";
 import CancelModal from "../../components/Delivery/CancelModal";
 import DeliveryOrderCard from "../../components/Delivery/DeliveryOrderCard";
 import Loading from "../../components/Loading";
 import type { Order } from "../../types";
-import { dummyDashboardOrdersData } from "../../assets/assets";
 import toast from "react-hot-toast";
 import axios from "axios";
 
@@ -23,23 +22,24 @@ export default function DeliveryDashboard() {
   const [tab, setTab] = useState<"active" | "completed">("active");
   const [tracking, setTracking] = useState(false);
 
-  // OTP modal
   const [otpModal, setOtpModal] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const watchIdRef = useRef<number | null>(null);
-  // Cancel modal
+
   const [cancelModal, setCancelModal] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState("");
 
-  const fetchOrders = async () => {
+  const watchIdRef = useRef<number | null>(null);
+  const lastSentAtRef = useRef<number>(0);
+
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await axios.get(
         `${API_URL}/delivery/my-deliveries?status=${tab}`,
         getAuthHeaders(),
       );
-      setOrders(data.orders);
+      setOrders(data.orders || []);
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
@@ -49,59 +49,78 @@ export default function DeliveryDashboard() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchOrders();
   }, [tab]);
 
   useEffect(() => {
-    const activeOrders = orders.filter((o) =>
-      ["Assigned", "Packed", "Out for Delivery"].includes(o.status),
-    );
-    if (activeOrders.length === 0 || !tracking) {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  const activeOrders = useMemo(
+    () =>
+      orders.filter((o) =>
+        ["Assigned", "Packed", "Out for Delivery"].includes(o.status),
+      ),
+    [orders],
+  );
+
+  useEffect(() => {
+    if (!tracking || activeOrders.length === 0) {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
       return;
     }
-    const sendLocation = (pos: GeolocationPosition) => {
-      const { latitude: lat, longitude: lng } = pos.coords;
 
-      activeOrders.forEach((order) => {
-        axios
-          .put(
-            `${API_URL}/delivery/my-deliveries/${order.id}/location`,
-            { lat, lng },
-            getAuthHeaders(),
-          )
-          .catch(() => {});
-      });
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported on this device.");
+      setTracking(false);
+      return;
+    }
+
+    const sendLocation = async (position: GeolocationPosition) => {
+      const now = Date.now();
+
+      if (now - lastSentAtRef.current < 10000) return;
+      lastSentAtRef.current = now;
+
+      const { latitude: lat, longitude: lng } = position.coords;
+
+      try {
+        await Promise.all(
+          activeOrders.map((order) =>
+            axios.put(
+              `${API_URL}/delivery/my-deliveries/${order.id}/location`,
+              { lat, lng },
+              getAuthHeaders(),
+            ),
+          ),
+        );
+      } catch {
+        // Silent failure to avoid noisy toasts during background tracking
+      }
     };
+
     watchIdRef.current = navigator.geolocation.watchPosition(
       sendLocation,
-      () => {},
+      (error) => {
+        toast.error(error.message || "Unable to access your location.");
+        setTracking(false);
+      },
       {
         enableHighAccuracy: true,
-        maximumAge: 1000,
+        maximumAge: 10000,
+        timeout: 15000,
       },
     );
-
-    const interval = setInterval(() => {
-      navigator.geolocation.getCurrentPosition(sendLocation, () => {}, {
-        enableHighAccuracy: true,
-      });
-    }, 1000);
 
     return () => {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
       }
-      clearInterval(interval);
     };
-  }, [orders, tracking]);
+  }, [tracking, activeOrders]);
 
   const handleUpdateStatus = async (orderId: string, status: string) => {
     try {
@@ -122,15 +141,16 @@ export default function DeliveryDashboard() {
   };
 
   const handleComplete = async () => {
-    if (!otpModal || !otp) return;
+    if (!otpModal || !otp.trim()) return;
+
     setSubmitting(true);
     try {
       await axios.put(
         `${API_URL}/delivery/my-deliveries/${otpModal}/complete`,
-        { otp },
+        { otp: otp.trim() },
         getAuthHeaders(),
       );
-      toast.success(`Delivery completed!`);
+      toast.success("Delivery completed successfully.");
       setOtpModal(null);
       setOtp("");
       fetchOrders();
@@ -147,14 +167,15 @@ export default function DeliveryDashboard() {
 
   const handleCancel = async () => {
     if (!cancelModal) return;
+
     setSubmitting(true);
     try {
       await axios.put(
         `${API_URL}/delivery/my-deliveries/${cancelModal}/cancel`,
-        { reason: cancelReason },
+        { reason: cancelReason.trim() },
         getAuthHeaders(),
       );
-      toast.success(`Delivery cancelled`);
+      toast.success("Delivery cancelled.");
       setCancelModal(null);
       setCancelReason("");
       fetchOrders();
@@ -171,43 +192,72 @@ export default function DeliveryDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Tabs + Tracking toggle */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {(["active", "completed"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors ${tab === t ? "bg-app-green text-white" : "bg-white text-zinc-600 hover:bg-app-cream border border-app-border"}`}
-          >
-            {t === "active" ? "Active" : "Completed"}
-          </button>
-        ))}
-        <div className="ml-auto">
-          <button
-            onClick={() => setTracking((prev) => !prev)}
-            className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors flex items-center gap-1.5 ${tracking ? "bg-green-600 text-white" : "bg-white text-zinc-600 border border-app-border hover:bg-app-cream"}`}
-          >
-            <NavigationIcon
-              className={`w-3.5 h-3.5 ${tracking ? "animate-pulse" : ""}`}
-            />
-            {tracking ? "Sharing Location" : "Share Location"}
-          </button>
+      <div className="rounded-[24px] border border-app-border/70 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <span className="mb-2 inline-flex rounded-full bg-app-green/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-app-green">
+              Delivery workspace
+            </span>
+            <h1 className="text-2xl font-semibold text-app-text">
+              My deliveries
+            </h1>
+            <p className="mt-1 text-sm text-app-text-light">
+              Track active assignments and complete deliveries on time.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {(["active", "completed"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+                  tab === t
+                    ? "bg-app-green text-white"
+                    : "border border-app-border bg-white text-app-text-light hover:bg-app-cream"
+                }`}
+              >
+                {t === "active" ? "Active" : "Completed"}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setTracking((prev) => !prev)}
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
+                tracking
+                  ? "bg-green-600 text-white"
+                  : "border border-app-border bg-white text-app-text-light hover:bg-app-cream"
+              }`}
+            >
+              {tracking ? (
+                <RadarIcon className="size-4 animate-pulse" />
+              ) : (
+                <NavigationIcon className="size-4" />
+              )}
+              {tracking ? "Sharing location" : "Share location"}
+            </button>
+          </div>
         </div>
+
+        {tracking && activeOrders.length > 0 && (
+          <p className="mt-4 text-xs leading-6 text-app-text-light">
+            Your location is being shared for active deliveries only.
+          </p>
+        )}
       </div>
 
-      {/* Orders */}
       {loading ? (
-        <Loading />
+        <Loading title="Loading deliveries" subtitle="Please wait a moment" />
       ) : orders.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-app-border">
-          <PackageIcon className="size-12 text-app-border mx-auto mb-3" />
-          <p className="text-lg font-semibold text-zinc-900 mb-1">
+        <div className="rounded-[24px] border border-app-border bg-white py-16 text-center shadow-sm">
+          <PackageIcon className="mx-auto mb-3 size-12 text-app-border" />
+          <p className="mb-1 text-lg font-semibold text-app-text">
             No {tab} deliveries
           </p>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-app-text-light">
             {tab === "active"
-              ? "You'll see new assignments here"
-              : "Completed deliveries will appear here"}
+              ? "New delivery assignments will appear here."
+              : "Completed deliveries will appear here."}
           </p>
         </div>
       ) : (
@@ -225,7 +275,6 @@ export default function DeliveryDashboard() {
         </div>
       )}
 
-      {/* OTP Modal */}
       {otpModal && (
         <OtpModal
           setOtpModal={setOtpModal}
@@ -235,7 +284,7 @@ export default function DeliveryDashboard() {
           submitting={submitting}
         />
       )}
-      {/* Cancel Modal */}
+
       {cancelModal && (
         <CancelModal
           setCancelModal={setCancelModal}

@@ -1,200 +1,271 @@
 import React, { useEffect, useState } from "react";
+import type { Order } from "../types";
 import { useNavigate, useParams } from "react-router-dom";
-import { dummyDashboardOrdersData } from "../assets/assets";
 import Loading from "../components/Loading";
-import { ArrowLeftIcon, MapPinIcon, PhoneIcon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  MapPinIcon,
+  PhoneIcon,
+  ReceiptTextIcon,
+  TruckIcon,
+} from "lucide-react";
 import OrderOTP from "../components/OrderTracking/OrderOTP";
 import LiveMap from "../components/OrderTracking/LiveMap";
 import OrderTimeLine from "../components/OrderTracking/OrderTimeLine";
 import api from "../config/api";
 
 const OrderTracking = () => {
+  const curr = import.meta.env.VITE_CURRENCY || "$";
   const { id } = useParams();
-  const navi = useNavigate();
+  const navigate = useNavigate();
+
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const [liveLocatoin, setLiveLocatoin] = useState<{
+  const [liveLocation, setLiveLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
 
   useEffect(() => {
+    if (!id) return;
+
+    setLoading(true);
+
     api
       .get(`/orders/${id}`)
       .then((res) => setOrder(res.data.order))
-      .catch(() => navi("/orders"))
+      .catch(() => navigate("/orders"))
       .finally(() => setLoading(false));
-  }, [id, navi]);
-  // live location every 10 secodns
+  }, [id, navigate]);
+
   useEffect(() => {
-    if (!order || ["Delivered", "Cancelled", "Placed"].includes(order.status)) {
+    if (
+      !id ||
+      !order ||
+      ["Delivered", "Cancelled", "Placed"].includes(order.status)
+    ) {
       return;
     }
-    const fetchLoaction = async () => {
+
+    let mounted = true;
+
+    const fetchLocation = async () => {
       try {
         const { data } = await api.get(`/orders/${id}/location`);
+
         if (
+          mounted &&
           data.liveLocation?.lat &&
           data.liveLocation?.lng &&
-          data.liveLocation.updatedAt
+          data.liveLocation?.updatedAt
         ) {
-          setLiveLocatoin({
+          setLiveLocation({
             lat: data.liveLocation.lat,
             lng: data.liveLocation.lng,
           });
         }
-        // Also update order status if it changed
-        if (data.status && data.status !== order.status) {
+
+        if (mounted && data.status && data.status !== order.status) {
           setOrder((prev) => (prev ? { ...prev, status: data.status } : prev));
         }
-      } catch (error) {}
+      } catch {
+        //
+      }
     };
-    fetchLoaction();
-    const interval = setInterval(fetchLoaction, 1000);
-    return () => clearInterval(interval);
+
+    fetchLocation();
+    const interval = setInterval(fetchLocation, 10000);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
   }, [id, order?.status]);
-  if (loading) {
-    return <Loading />;
-  }
-  if (!order) {
-    return null;
-  }
+
+  if (loading) return <Loading />;
+  if (!order) return null;
+
+  const statusClass =
+    order.status === "Delivered"
+      ? "bg-green-100 text-green-700"
+      : order.status === "Cancelled"
+        ? "bg-red-100 text-red-700"
+        : "bg-app-orange/10 text-app-orange";
+
   return (
-    <div className=" min-h-screen mb-20 bg-app-cream">
-      <div className=" max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* header */}
+    <div className="min-h-screen bg-app-cream pb-20">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <button
-          onClick={() => navi("/orders")}
-          className=" flex items-center gap-2 text-sm text-app-text-light hover:text-app-green mb-6 transition-colors"
+          onClick={() => navigate("/orders")}
+          className="mb-6 inline-flex items-center gap-2 text-sm text-app-text-light transition-colors hover:text-app-green"
         >
-          <ArrowLeftIcon className=" size-4" />
+          <ArrowLeftIcon className="size-4" />
           Back to orders
         </button>
-        {/* order id, date, status */}
-        <div className=" flex items-center justify-between mb-8">
-          <div className="">
-            <h1>Order #{order!.id.slice(-8).toUpperCase()}</h1>
-            <p className=" text-sm text-app-text-light mt-1">
-              Placed on{" "}
-              {new Date(order!.createdAt).toLocaleDateString("en-US", {
-                month: "long",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </p>
+
+        <div className="mb-8 rounded-[28px] border border-app-border/70 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <span className="mb-2 inline-flex rounded-full bg-app-green/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-app-green">
+                Order tracking
+              </span>
+
+              <h1 className="text-2xl font-semibold text-app-text sm:text-3xl">
+                Order #{order.id.slice(-8).toUpperCase()}
+              </h1>
+
+              <p className="mt-1 text-sm text-app-text-light">
+                Placed on{" "}
+                {new Date(order.createdAt).toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+
+            <span
+              className={`self-start rounded-full px-4 py-1.5 text-sm font-semibold ${statusClass}`}
+            >
+              {order.status}
+            </span>
           </div>
-          <span
-            className={`px-4 py-1.5 text-sm font-semibold rounded-full ${order!.status === "Delivered" ? "bg-green-100 text-green-700" : order!.status === "Cancelled" ? "bg-red-100 text-red-700" : "bg-app-orange/10 text-app-orange"}`}
-          >
-            {order!.status}
-          </span>
         </div>
-        <div className=" grid lg:grid-cols-3 gap-6">
-          {/* left site - timeline + map area */}
-          <div className=" lg:col-span-2 space-y-6">
-            {/* otp card */}
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
             <OrderOTP order={order} />
-            {/* live tracking map */}
-            <LiveMap order={order} liveLocation={liveLocatoin} />
-            {/* progress timeline */}
+            <LiveMap order={order} liveLocation={liveLocation} />
             <OrderTimeLine order={order} />
-            {/* delivery person */}
-            {order?.deliveryPartner &&
+
+            {order.deliveryPartner &&
               order.status !== "Delivered" &&
               order.status !== "Cancelled" && (
-                <div className=" bg-white rounded-2xl p-5 flex items-center justify-between">
-                  <div className=" flex items-center gap-3">
-                    <div className=" size-11 rounded-full bg-app-green flex-center">
-                      <span className=" text-white font-semibold text-sm">
+                <div className="flex flex-col gap-4 rounded-[24px] border border-app-border/70 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-12 items-center justify-center rounded-full bg-app-green text-white">
+                      <span className="text-sm font-semibold">
                         {order.deliveryPartner.name.charAt(0)}
                       </span>
                     </div>
-                    <div className="">
-                      <p className=" text-sm font-semibold text-app-green">
+
+                    <div>
+                      <p className="text-sm font-semibold text-app-text">
                         {order.deliveryPartner.name}
                       </p>
-                      <p className=" text-xs text-app-text-light capitalize">
-                        {order.deliveryPartner.vehicleType} - Delivery Partner
+                      <p className="text-xs capitalize text-app-text-light">
+                        {order.deliveryPartner.vehicleType} · Delivery partner
                       </p>
                     </div>
                   </div>
+
                   <a
                     href={`tel:${order.deliveryPartner.phone}`}
-                    className=" p-2.5 bg-app-cream rounded-xl hover:bg-app-cream-dark transition-colors"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-app-cream transition-colors hover:bg-app-cream-dark"
+                    aria-label="Call delivery partner"
                   >
-                    <PhoneIcon className=" size-4 text-app-green" />
+                    <PhoneIcon className="size-4 text-app-green" />
                   </a>
                 </div>
               )}
           </div>
-          {/* right side - order details sidebar */}
-          <div className=" space-y-5">
-            {/* delivery address */}
-            <div className=" bg-white rounded-2xl p-5">
-              <h3 className=" text-sm font-semibold text-app-green mb-3 flex items-center gap-2">
-                <MapPinIcon className=" size-4" />
-                Delivery Address
+
+          <aside className="space-y-5">
+            <div className="rounded-[24px] border border-app-border/70 bg-white p-5 shadow-sm">
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-app-text">
+                <MapPinIcon className="size-4" />
+                Delivery address
               </h3>
-              <p className=" text-sm text-app-text-light leading-relaxed">
-                {order?.shippingAddress.lable}
+
+              <p className="text-sm leading-7 text-app-text-light">
+                {order.shippingAddress.label}
                 <br />
-                {order?.shippingAddress.address}
+                {order.shippingAddress.address}
                 <br />
-                {order?.shippingAddress.city} , {order?.shippingAddress.state} ,
-                {order?.shippingAddress.zip}
+                {order.shippingAddress.city}, {order.shippingAddress.state},{" "}
+                {order.shippingAddress.zip}
               </p>
             </div>
-            {/* items */}
-            <div className=" bg-white rounded-2xl p-5">
-              <h3 className=" text-sm font-semibold text-app-green mb-3">
-                Items ({order?.items.length})
+
+            <div className="rounded-[24px] border border-app-border/70 bg-white p-5 shadow-sm">
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-app-text">
+                <TruckIcon className="size-4" />
+                Items ({order.items.length})
               </h3>
-              <div className=" space-y-3">
-                {order?.items.map((item, i) => (
-                  <div key={i} className=" flex items-center gap-3">
+
+              <div className="space-y-3">
+                {order.items.map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
                     <img
                       src={item.image}
-                      className=" size-10 rounded-lg object-cover"
-                      alt=""
+                      alt={item.name}
+                      className="size-11 rounded-xl border border-app-border bg-app-cream object-cover"
                     />
-                    <div className=" flex-1 min-w-0">
-                      <p className=" text-sm font-medium text-app-green truncate">
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-app-text">
                         {item.name}
                       </p>
-                      <p className=" text-xs text-app-text-light">
-                        x{item.quantity}
+                      <p className="text-xs text-app-text-light">
+                        Qty {item.quantity}
                       </p>
                     </div>
-                    <span className=" text-sm font-semibold">
-                      ${(item.price * item.quantity).toFixed(2)}
+
+                    <span className="text-sm font-semibold text-app-text">
+                      {curr}
+                      {(item.price * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
               </div>
-              <div className=" mt-4 pt-3 border-t border-app-border space-y-1.5 text-sm">
-                <div className=" flex justify-between">
-                  <span className=" text-app-text-light">Subtotal</span>
-                  <span className="">${order.subtotal.toFixed(2)}</span>
-                </div>
-                <div className=" flex justify-between">
-                  <span className=" text-app-text-light">Delivery</span>
-                  <span className="">
-                    {order?.deliveryFee === 0
-                      ? "Free"
-                      : `${order?.deliveryFee.toFixed(2)}`}
+
+              <div className="mt-4 space-y-2 border-t border-app-border pt-4 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-app-text-light">Subtotal</span>
+                  <span>
+                    {curr}
+                    {order.subtotal.toFixed(2)}
                   </span>
                 </div>
-                <div className=" flex justify-between">
-                  <span className=" text-app-text-light">Tax</span>
-                  <span className="">{order?.tax.toFixed(2)}</span>
+
+                <div className="flex justify-between">
+                  <span className="text-app-text-light">Delivery</span>
+                  <span>
+                    {order.deliveryFee === 0
+                      ? "Free"
+                      : `${curr}${order.deliveryFee.toFixed(2)}`}
+                  </span>
                 </div>
-                <div className="flex justify-between pt-2 border-t border-app-border font-semibold text-app-green">
-                  <span className="">Total</span>
-                  <span className="">{order?.total.toFixed(2)}</span>
+
+                <div className="flex justify-between">
+                  <span className="text-app-text-light">Tax</span>
+                  <span>
+                    {curr}
+                    {order.tax.toFixed(2)}
+                  </span>
+                </div>
+
+                <div className="flex justify-between border-t border-app-border pt-3 font-semibold text-app-text">
+                  <span>Total</span>
+                  <span>
+                    {curr}
+                    {order.total.toFixed(2)}
+                  </span>
                 </div>
               </div>
             </div>
-          </div>
+
+            <div className="rounded-[24px] border border-app-border/70 bg-white p-5 shadow-sm">
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-app-text">
+                <ReceiptTextIcon className="size-4" />
+                Order support
+              </h3>
+              <p className="text-sm leading-7 text-app-text-light">
+                Need help with this delivery? Contact support with your order
+                number for faster assistance.
+              </p>
+            </div>
+          </aside>
         </div>
       </div>
     </div>

@@ -1,45 +1,44 @@
-import { BikeIcon } from "lucide-react";
 import React from "react";
 import { Link } from "react-router-dom";
 import { footerData } from "../assets/assets";
+import { BiBasket, BiChevronRight } from "react-icons/bi";
 
 const Footer = () => {
   return (
-    <footer className="bg-app-green text-white relative overflow-hidden">
-      {/* Decorative background circles */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* TOP SECTION */}
-        <div className="py-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-          {/* Brand Column */}
-          <div className="lg:col-span-1">
-            {/* Logo */}
+    <footer className="border-t border-app-border bg-app-text text-white">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1.1fr]">
+          <div>
             <Link
-              to={"/"}
-              className="inline-flex items-center gap-2.5 mb-5 group"
+              to="/"
+              className="mb-5 inline-flex items-center gap-2.5 text-white"
             >
-              <div className="size-9 rounded-xl bg-white/15 flex items-center justify-center group-hover:bg-white/25 transition-colors">
-                <BikeIcon className="size-5 text-white" />
-              </div>
-              <span className="text-lg font-semibold text-white">
-                {footerData.brand.name}
+              <span className="flex size-10 items-center justify-center rounded-2xl bg-white/10">
+                <BiBasket className="size-5" />
               </span>
+              <div>
+                <span className="block text-lg font-semibold">
+                  {footerData.brand.name}
+                </span>
+                <span className="block text-xs text-white/45">
+                  Fresh delivery, modern shopping
+                </span>
+              </div>
             </Link>
 
-            {/* Description */}
-            <p className="text-sm text-white/60 leading-relaxed mb-6 max-w-xs">
+            <p className="max-w-sm text-sm leading-7 text-white/60">
               {footerData.brand.description}
             </p>
 
-            {/* Socials */}
-            <div className="flex gap-2.5">
+            <div className="mt-6 flex flex-wrap gap-2.5">
               {footerData.brand.socials.map((social, i) => (
                 <a
-                  href={social.link}
                   key={i}
-                  className="size-9 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center hover:bg-white/20 hover:border-white/20 transition-all duration-200"
+                  href={social.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex size-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/75 transition-all duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white"
+                  aria-label={social.label || `Social link ${i + 1}`}
                 >
                   <social.icon className="size-4" />
                 </a>
@@ -47,29 +46,31 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Sections Columns */}
           {footerData.sections.map((section, i) => (
             <div key={i}>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-white/40 mb-5">
+              <h3 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
                 {section.title}
               </h3>
+
               <ul className="space-y-3">
                 {section.links.map((link, j) => (
                   <li key={j}>
                     {link.to ? (
                       <Link
                         to={link.to}
-                        className="text-sm text-white/70 hover:text-white transition-colors duration-150 flex items-center gap-1.5 group"
+                        className="group inline-flex items-center gap-2 text-sm text-white/65 transition-colors duration-200 hover:text-white"
                       >
-                        <span className="w-0 group-hover:w-2 h-px bg-white transition-all duration-200 rounded-full" />
+                        <BiChevronRight className="size-4 text-white/25 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-app-orange" />
                         {link.label}
                       </Link>
                     ) : (
                       <a
                         href={link.href}
-                        className="text-sm text-white/70 hover:text-white transition-colors duration-150 flex items-center gap-1.5 group"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group inline-flex items-center gap-2 text-sm text-white/65 transition-colors duration-200 hover:text-white"
                       >
-                        <span className="w-0 group-hover:w-2 h-px bg-white transition-all duration-200 rounded-full" />
+                        <BiChevronRight className="size-4 text-white/25 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-app-orange" />
                         {link.label}
                       </a>
                     )}
@@ -79,20 +80,20 @@ const Footer = () => {
             </div>
           ))}
 
-          {/* Contact Column */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-widest text-white/40 mb-5">
-              Contact Us
+            <h3 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/35">
+              Contact us
             </h3>
+
             <ul className="space-y-4">
               {footerData.contact.map((item, i) => {
                 const Icon = item.icon;
                 return (
                   <li key={i} className="flex items-start gap-3">
-                    <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <Icon className="size-3.5 text-white" />
+                    <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/8 text-white/80">
+                      <Icon className="size-4" />
                     </div>
-                    <span className="text-sm text-white/60 leading-relaxed">
+                    <span className="text-sm leading-6 text-white/60">
                       {item.text}
                     </span>
                   </li>
@@ -102,30 +103,22 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* DIVIDER with gradient */}
-        <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div className="h-px bg-white/10" />
 
-        {/* BOTTOM BAR */}
-        <div className="py-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <BikeIcon className="size-4 text-white/30" />
-            <p className="text-xs text-white/40">
-              {footerData.bottom.copyright}
-            </p>
-          </div>
-          <div className="flex items-center gap-1">
+        <div className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-white/40">{footerData.bottom.copyright}</p>
+
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             {footerData.bottom.links.map((link, i) => (
-              <React.Fragment key={i}>
-                <a
-                  href={link.href}
-                  className="text-xs text-white/40 hover:text-white/70 transition-colors px-3 py-1 rounded-md hover:bg-white/10"
-                >
-                  {link.label}
-                </a>
-                {i < footerData.bottom.links.length - 1 && (
-                  <span className="text-white/20 text-xs">·</span>
-                )}
-              </React.Fragment>
+              <a
+                key={i}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg px-2.5 py-1 text-xs text-white/40 transition-colors hover:bg-white/5 hover:text-white/70"
+              >
+                {link.label}
+              </a>
             ))}
           </div>
         </div>

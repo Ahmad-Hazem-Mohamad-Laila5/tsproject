@@ -12,155 +12,210 @@ import {
 const CartSidebar = () => {
   const {
     items,
-    addToCart,
     removeFromCart,
     updateQuantity,
-    clearCart,
-    cartCount,
     cartTotal,
     isCartOpen,
     setIsCartOpen,
   } = useCart();
+
   const navigate = useNavigate();
-  const currency = import.meta.env.DOLLAR || "$";
+  const currency = import.meta.env.VITE_CURRENCY || "$";
 
-  if (!isCartOpen) {
-    return null;
-  }
+  if (!isCartOpen) return null;
 
-  const deliveruFree = cartTotal > 20 ? 0 : 1.99;
-  const grandTotal = cartTotal + deliveruFree;
+  const deliveryFee = cartTotal > 20 ? 0 : 1.99;
+  const grandTotal = cartTotal + deliveryFee;
+
   return (
     <>
-      {/*overlay  */}
       <div
         onClick={() => setIsCartOpen(false)}
-        className=" fixed inset-0 bg-black/40 z-50 transition-opacity"
-      ></div>
-      {/*sidebar  */}
-      <div className=" fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-2xl flex flex-col animate-slide-in-right">
-        {/* header */}
-        <div className=" flex items-center justify-between p-5 border-b border-app-border">
-          <div className=" flex items-center gap-2">
-            <ShoppingBagIcon className=" size-5" />
-            <h2 className=" text-lg font-medium">Your Cart</h2>
-            <span className=" px-2 py-0.5 text-xs font-semibold bg-app-cream rounded-full">
-              {items.length} items
-            </span>
+        className="fixed inset-0 z-50 bg-app-text/40 backdrop-blur-[2px]"
+      />
+
+      <aside className="fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l border-app-border bg-white shadow-2xl animate-slide-in-right">
+        <div className="border-b border-app-border px-5 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex size-11 items-center justify-center rounded-2xl bg-app-cream text-app-green">
+                <ShoppingBagIcon className="size-5" />
+              </div>
+
+              <div>
+                <h2 className="text-base font-semibold text-app-text">
+                  Your cart
+                </h2>
+                <p className="text-xs text-app-text-light">
+                  {items.length} {items.length === 1 ? "item" : "items"}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsCartOpen(false)}
+              className="flex size-10 items-center justify-center rounded-xl text-app-text-light transition-colors hover:bg-app-cream hover:text-app-text"
+              aria-label="Close cart"
+            >
+              <XIcon className="size-5" />
+            </button>
           </div>
-          <button
-            onClick={() => setIsCartOpen(false)}
-            className=" p-2 rounded-xl hover:bg-app-cream transition-colors"
-          >
-            <XIcon className=" size-5" />
-          </button>
         </div>
-        {/* items */}
-        <div className=" flex-1 overflow-y-auto p-5 space-y-4">
+
+        <div className="flex-1 overflow-y-auto px-5 py-5">
           {items.length === 0 ? (
-            <div className=" flex flex-col items-center justify-center h-full text-center">
-              <ShoppingBagIcon className=" size-16 text-app-border mb-4" />
-              <h3 className=" text-lg font-medium mb-1">Your Cart is empty</h3>
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-app-cream text-app-text-light">
+                <ShoppingBagIcon className="size-8" />
+              </div>
+              <h3 className="text-lg font-semibold text-app-text">
+                Your cart is empty
+              </h3>
+              <p className="mt-1 max-w-[240px] text-sm text-app-text-light">
+                Add some fresh picks to start your order.
+              </p>
             </div>
           ) : (
-            items.map((item) => (
-              <div
-                className=" flex gap-3 bg-app-cream/60 rounded-xl p-3"
-                key={item.product.id}
-              >
-                <img
-                  src={item.product.image}
-                  className=" size-16 rounded-lg object-cover shrink-0"
-                  alt=""
-                />
-                <div className=" flex-1 min-w-0">
-                  <h4 className=" text-sm font-semibold truncate">
-                    {item.product.name}
-                  </h4>
-                  <p className=" text-xs text-app-text-light">
-                    ${item.product.price.toFixed(2)}/{item.product.unit}
-                  </p>
-                  <div className=" flex items-center justify-between mt-2">
-                    <div className=" flex items-center gap-1.5">
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.product.id, item.quantity - 1)
-                        }
-                        className=" size-7 rounded-lg bg-white border border-app-border flex-centre"
-                      >
-                        <Minus className=" size-3" />
-                      </button>
-                      <span className=" text-sm font-semibold w-6 text-center">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.product.id, item.quantity + 1)
-                        }
-                        className=" size-7 rounded-lg bg-white border border-app-border flex-centre"
-                      >
-                        <Plus className=" size-3" />
-                      </button>
+            <div className="space-y-4">
+              {items.map((item) => (
+                <div
+                  key={item.product.id}
+                  className="rounded-[22px] border border-app-border/70 bg-gradient-to-b from-white to-app-cream p-3 shadow-sm"
+                >
+                  <div className="flex gap-3">
+                    <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white">
+                      <img
+                        src={item.product.image}
+                        alt={item.product.name}
+                        className="h-full w-full object-contain p-2"
+                      />
                     </div>
-                    <div className=" flex items-center gap-2">
-                      <span className=" text-sm font-semibold">
-                        ${(item.product.price * item.quantity).toFixed(2)}
-                      </span>
-                      <button
-                        className=" p-1 text-app-text-light hover:to-app-error transition-colors"
-                        onClick={() => removeFromCart(item.product.id)}
-                      >
-                        <Trash2Icon className=" size-4" />
-                      </button>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h4 className="line-clamp-2 text-sm font-semibold leading-5 text-app-text">
+                            {item.product.name}
+                          </h4>
+                          <p className="mt-1 text-xs text-app-text-light">
+                            {currency}
+                            {item.product.price.toFixed(2)} /{" "}
+                            {item.product.unit}
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => removeFromCart(item.product.id)}
+                          className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg text-app-text-light transition-colors hover:bg-white hover:text-app-error"
+                          aria-label="Remove item"
+                          title="Remove item"
+                        >
+                          <Trash2Icon className="size-4" />
+                        </button>
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-1.5 rounded-full border border-app-border bg-white px-1.5 py-1 shadow-sm">
+                          <button
+                            onClick={() =>
+                              updateQuantity(item.product.id, item.quantity - 1)
+                            }
+                            className="flex size-8 items-center justify-center rounded-full text-app-text transition hover:bg-app-orange/10 hover:text-app-orange"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus className="size-4" />
+                          </button>
+
+                          <span className="min-w-[22px] text-center text-sm font-semibold text-app-text">
+                            {item.quantity}
+                          </span>
+
+                          <button
+                            onClick={() =>
+                              updateQuantity(item.product.id, item.quantity + 1)
+                            }
+                            className="flex size-8 items-center justify-center rounded-full bg-app-green text-white transition hover:bg-app-green-light"
+                            aria-label="Increase quantity"
+                          >
+                            <Plus className="size-4" />
+                          </button>
+                        </div>
+
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-app-text">
+                            {currency}
+                            {(item.product.price * item.quantity).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
-        {/* footer */}
+
         {items.length > 0 && (
-          <div className=" p-5 border-t border-app-border space-y-3">
-            <div className=" flex justify-between text-sm">
-              <span className=" text-app-text-light">Subtotal</span>
-              <span className=" font-medium">${cartTotal.toFixed(2)}</span>
+          <div className="border-t border-app-border bg-white px-5 py-5">
+            <div className="mb-4 rounded-2xl bg-app-cream px-4 py-3 text-center">
+              {deliveryFee === 0 ? (
+                <p className="text-sm font-medium text-app-success">
+                  You unlocked free delivery
+                </p>
+              ) : (
+                <p className="text-sm text-app-text-light">
+                  Add{" "}
+                  <span className="font-semibold text-app-text">
+                    {currency}
+                    {(20 - cartTotal).toFixed(2)}
+                  </span>{" "}
+                  more to get free delivery.
+                </p>
+              )}
             </div>
-            <div className=" flex justify-between text-sm">
-              <span className=" text-app-text-light">Delivery</span>
-              <span className=" font-medium">
-                {deliveruFree === 0 ? (
-                  <span className=" text-app-success">Free</span>
-                ) : (
-                  `${currency}${deliveruFree.toFixed(2)}`
-                )}
-              </span>
+
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-app-text-light">Subtotal</span>
+                <span className="font-medium text-app-text">
+                  {currency}
+                  {cartTotal.toFixed(2)}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-app-text-light">Delivery</span>
+                <span className="font-medium text-app-text">
+                  {deliveryFee === 0
+                    ? "Free"
+                    : `${currency}${deliveryFee.toFixed(2)}`}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-app-border pt-3 text-base font-semibold">
+                <span className="text-app-text">Total</span>
+                <span className="text-app-text">
+                  {currency}
+                  {grandTotal.toFixed(2)}
+                </span>
+              </div>
             </div>
-            {deliveruFree > 0 && (
-              <p className=" text-xs text-app-text-light text-center">
-                Free deleivery on orders over {currency}20!
-              </p>
-            )}
-            <div className=" flex justify-between text-base font-semibold border-t border-app-border pt-3">
-              <span className="">Total</span>
-              <span className="">
-                {currency}
-                {grandTotal.toFixed(2)}
-              </span>
-            </div>
+
             <button
               onClick={() => {
                 setIsCartOpen(false);
                 navigate("/checkout");
                 window.scrollTo(0, 0);
               }}
-              className=" w-full py-3 bg-app-orange text-white font-semibold rounded-xl hover:bg-app-orange-dark transition-colors flex-center gap-2 active:scale-[0.98]"
+              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-app-green px-5 py-3.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-app-green-light active:scale-[0.98]"
             >
-              Proceed to Checkout <ArrowRightIcon className=" size-4" />
+              Proceed to checkout
+              <ArrowRightIcon className="size-4" />
             </button>
           </div>
         )}
-      </div>
+      </aside>
     </>
   );
 };

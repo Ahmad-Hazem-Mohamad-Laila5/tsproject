@@ -1,87 +1,140 @@
-import { ChevronRightIcon, MapPinIcon, PlusIcon } from "lucide-react";
+import { MapPinIcon, PlusIcon, CheckIcon } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import { Link } from "react-router-dom";
-import type { Address, CheckoutStep } from "../../types";
+import type { Address } from "../../types";
 
 interface CheckoutAddressProps {
-  user: any;
+  user: {
+    addresses?: Address[];
+  } | null;
   address: Address;
   setAddress: Dispatch<SetStateAction<Address>>;
-  setStep: Dispatch<SetStateAction<CheckoutStep>>;
 }
 
 const CheckoutAddress = ({
   user,
   address,
   setAddress,
-  setStep,
 }: CheckoutAddressProps) => {
+  const addresses = user?.addresses || [];
+
+  const isSelected = (addr: Address) => {
+    if (addr.id && address.id) return addr.id === address.id;
+    return addr.label === address.label && addr.address === address.address;
+  };
+
   return (
-    <div className="bg-white rounded-2xl p-6 animate-fade-in">
-      <h2 className="text-lg font-semibold text-app-green mb-5 flex items-center gap-2">
-        <MapPinIcon className="size-5" /> Delivery Address
-      </h2>
-      {user?.addresses && user.addresses.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-sm font-semibold text-app-green mb-3">
-            Saved Addresses
-          </h3>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {user.addresses.map((addr: any) => (
-              <div
-                key={addr.id || addr.label}
-                onClick={() =>
-                  setAddress({
-                    id: addr.id || "",
-                    label: addr.label,
-                    address: addr.address,
-                    city: addr.city,
-                    state: addr.state,
-                    zip: addr.zip,
-                    isDefault: addr.isDefault || false,
-                    lat: addr.lat,
-                    lng: addr.lng,
-                  })
-                }
-                className={`p-4 rounded-xl border cursor-pointer transition-colors ${address.label === addr.label && address.address === addr.address ? "border-app-green bg-app-cream" : "border-app-border hover:bg-app-cream"}`}
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <MapPinIcon className="size-4 text-app-green" />
-                  <span className="font-semibold text-zinc-900 text-sm">
-                    {addr.label}
-                  </span>
-                  {addr.isDefault && (
-                    <span className="text-[10px] font-semibold text-app-orange uppercase tracking-wider bg-orange-50 px-2 py-0.5 rounded-full">
-                      Default
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-zinc-600 truncate">{addr.address}</p>
-                <p className="text-xs text-zinc-500">
-                  {addr.city}, {addr.state} {addr.zip}
-                </p>
-              </div>
-            ))}
+    <section className="rounded-[24px] border border-app-border/70 bg-white p-6 shadow-sm animate-fade-in">
+      <div className="mb-5">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-app-text">
+          <MapPinIcon className="size-5 text-app-green" />
+          Delivery address
+        </h2>
+        <p className="mt-1 text-sm text-app-text-light">
+          Choose where you want your order delivered.
+        </p>
+      </div>
+
+      {addresses.length > 0 ? (
+        <div className="mb-5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-app-text">
+              Saved addresses
+            </h3>
+            <Link
+              to="/addresses"
+              className="text-xs font-medium text-app-green transition-colors hover:text-app-green-light"
+            >
+              Manage addresses
+            </Link>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {addresses.map((addr) => {
+              const active = isSelected(addr);
+
+              return (
+                <button
+                  key={addr.id || `${addr.label}-${addr.address}`}
+                  type="button"
+                  onClick={() =>
+                    setAddress({
+                      id: addr.id || "",
+                      label: addr.label,
+                      address: addr.address,
+                      city: addr.city,
+                      state: addr.state,
+                      zip: addr.zip,
+                      isDefault: addr.isDefault || false,
+                      lat: addr.lat || 0,
+                      lng: addr.lng || 0,
+                    })
+                  }
+                  className={`relative rounded-2xl border p-4 text-left transition-all ${
+                    active
+                      ? "border-app-green bg-app-green/5 shadow-sm"
+                      : "border-app-border hover:border-app-green/25 hover:bg-app-cream/40"
+                  }`}
+                >
+                  <div className="mb-2 flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`flex size-8 items-center justify-center rounded-xl ${
+                          active
+                            ? "bg-app-green text-white"
+                            : "bg-app-cream text-app-green"
+                        }`}
+                      >
+                        <MapPinIcon className="size-4" />
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-semibold text-app-text">
+                          {addr.label}
+                        </p>
+                        {addr.isDefault && (
+                          <span className="mt-1 inline-flex rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-app-orange">
+                            Default
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {active && (
+                      <div className="flex size-6 items-center justify-center rounded-full bg-app-green text-white">
+                        <CheckIcon className="size-3.5" />
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-sm leading-6 text-app-text-light">
+                    {addr.address}
+                  </p>
+                  <p className="mt-1 text-xs text-app-text-light">
+                    {addr.city}, {addr.state} {addr.zip}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         </div>
+      ) : (
+        <div className="mb-5 rounded-2xl bg-app-cream/70 p-5">
+          <p className="text-sm text-app-text-light">
+            You do not have a saved address yet. Add one to continue with
+            checkout.
+          </p>
+        </div>
       )}
+
       <Link
         to="/addresses"
-        className="mt-6 px-6 py-3 border border-gray-600 text-gray-600 rounded-xl flex-center gap-2"
+        className="inline-flex items-center gap-2 rounded-xl border border-app-border px-4 py-2.5 text-sm font-medium text-app-text transition-colors hover:bg-app-cream"
       >
-        Add New Address <PlusIcon className="size-4" />
+        <PlusIcon className="size-4" />
+        Add new address
       </Link>
-      <button
-        onClick={() => {
-          setStep("payment");
-          scrollTo(0, 0);
-        }}
-        disabled={!address.address || !address.city}
-        className="mt-6 px-6 py-3 bg-app-green text-white font-semibold rounded-xl hover:bg-app-green-light transition-colors disabled:opacity-50 flex items-center gap-2"
-      >
-        Continue to Payment <ChevronRightIcon className="size-4" />
-      </button>
-    </div>
+    </section>
   );
 };
 
